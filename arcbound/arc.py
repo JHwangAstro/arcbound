@@ -22,8 +22,9 @@ def arc(**attribute_kwargs) -> Callable:
         import arcbound as ab 
 
         class test():
-            def __init__(self, root_val: int):
+            def __init__(self, root_val: int) -> None:
                 self.root = root_val
+                return None
 
             @property
             @ab.arc(x="root")
@@ -73,9 +74,15 @@ def arc(**attribute_kwargs) -> Callable:
             
             return f(self, **combined_kwargs)
 
-        wrapper.deps = tuple(attribute_kwargs.values())
+        wrapper.arc = tuple(attribute_kwargs.values())
         
         return wrapper
     
     return wrapper_factory 
 
+
+def Arc():
+    """
+    """
+    def __init__(self):
+        pass
