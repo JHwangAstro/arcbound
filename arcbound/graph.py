@@ -23,7 +23,7 @@ def create_arcbound_graph(cls: T) -> ArcboundGraph:
     """
     class ArcboundGraph(object):
         """
-        Attributes:
+        Properties:
             class_attrs: List of attribute names belonging to the input class.
             properties: Dictionary mapping methods decorated with both
                 property and arcbound.arc to the property name.
@@ -32,8 +32,9 @@ def create_arcbound_graph(cls: T) -> ArcboundGraph:
             arcs: Dictionary mapping dependencies of methods decorated with
                 arcbound.arc.
             
-        Functions:
-            get_node: Returns as a curried function the decorated method.
+        Methods:
+            get_node: Returns as a curried function the decorated method with
+                the instance variable already set.
         """
         @property
         @functools.lru_cache()
@@ -139,19 +140,26 @@ def graph(cls: T) -> Callable[[T], T]:
                 return x * y
 
         Test = test(5)
+
         Test.arcbound_graph.methods
         # {'leaf': <function __main__.test.leaf(self, x:int, y:int) -> int>}
+
         Test.arcbound_graph.properties
         # {'branch': <function __main__.test.branch(self, x:int) -> int>}
-        Test.arcbound_nodes
+
+        Test.arcbound_graph.nodes
         # {'branch': <function __main__.test.branch(self, x:int) -> int>,
         #  'leaf': <function __main__.test.leaf(self, x:int, y:int) -> int>}
+
         Test.get_arcbound_node("branch")(10)
         # 100
+
         Test.get_arcbound_node("leaf")(2, 3)
         # 6
+
         Test.get_arcbound_node("twig")(2, 3)
         # This method is not decorated.
+        
         Test.get_arcbound_node("nest")(10)
         # This method does not exist.
     """
