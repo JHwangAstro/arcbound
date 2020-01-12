@@ -165,7 +165,7 @@ def graph(cls: ClassType) -> Callable[[ClassType], ClassType]:
         # This method does not exist.
     """
     @functools.wraps(cls)
-    class wrapper_class():
+    class wrapper_class(cls):
         """ Returns a class with properties and functions leveraging methods
         decorated with the arcbound.arc function.
 
