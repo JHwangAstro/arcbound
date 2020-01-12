@@ -5,7 +5,10 @@ documenting this dependency.
 
 import functools
 import inspect
-from typing import Callable
+from typing import Callable, TypeVar
+
+ReturnType = TypeVar("ReturnType")
+FuncType = Callable[..., RT]
 
 def arc(**attribute_kwargs) -> Callable:
     """ Returns a function that sets instance attributes as default values.
@@ -21,7 +24,7 @@ def arc(**attribute_kwargs) -> Callable:
     Example:
         import arcbound as ab 
 
-        class test():
+        class Test():
             def __init__(self, root_val: int) -> None:
                 self.root = root_val
                 return None
@@ -35,13 +38,13 @@ def arc(**attribute_kwargs) -> Callable:
             def leaf(self, x: int, y: int) -> int:
                 return x * y
 
-        Test = test(5)
-        Test.branch # 25
-        Test.leaf() # 625
-        Test.leaf(x=10) # 250
-        Test.leaf(x=10, y=10) #100
+        test = Test(5)
+        test.branch # 25
+        test.leaf() # 625
+        test.leaf(x=10) # 250
+        test.leaf(x=10, y=10) #100
     """
-    def wrapper_factory(f: Callable) -> Callable:
+    def wrapper_factory(f: FuncType) -> FuncType:
         """ Returns a function with default values set to the object's
         attributes and adds the deps attribute to the wrapper function.
 
@@ -49,7 +52,7 @@ def arc(**attribute_kwargs) -> Callable:
             f: Function to decorate.
         """
         @functools.wraps(f)
-        def wrapper(*args, **kwargs) -> Callable:
+        def wrapper(*args, **kwargs) -> ReturnType:
             """ Returns the results of the input function with default values
             set by the attribute kwargs.
 
@@ -80,9 +83,3 @@ def arc(**attribute_kwargs) -> Callable:
     
     return wrapper_factory 
 
-
-def Arc():
-    """
-    """
-    def __init__(self):
-        pass
