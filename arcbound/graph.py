@@ -7,11 +7,12 @@ import inspect
 from typing import Callable, Dict, List, Tuple, Type, TypeVar
 
 from .arc import arc
+from .visualize import Digraph
 
-T = TypeVar("T")
+ClassType = TypeVar("ClassType")
 ArcboundGraph = TypeVar("ArcboundGraph", bound="ArcboundGraph")
 
-def create_arcbound_graph(cls: T) -> ArcboundGraph:
+def create_arcbound_graph(cls: ClassType) -> ArcboundGraph:
     """ Returns an ArcboundGraph object created using an input class.
 
     The ArcboundGraph object contains properties summarizing the attributes of
@@ -111,7 +112,7 @@ def create_arcbound_graph(cls: T) -> ArcboundGraph:
     return ArcboundGraph
 
 
-def graph(cls: T) -> Callable[[T], T]:
+def graph(cls: ClassType) -> Callable[[ClassType], ClassType]:
     """ Returns a class with properties and functions leveraging methods
     decorated with the arcbound.arc function.
 
@@ -163,7 +164,8 @@ def graph(cls: T) -> Callable[[T], T]:
         Test.get_arcbound_node("nest")(10)
         # This method does not exist.
     """
-    class wrapper_class(cls):
+    @functools.wraps(cls)
+    class wrapper_class():
         """ Returns a class with properties and functions leveraging methods
         decorated with the arcbound.arc function.
 
