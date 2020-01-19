@@ -8,7 +8,7 @@ import inspect
 from typing import Callable, TypeVar
 
 ReturnType = TypeVar("ReturnType")
-FuncType = Callable[..., RT]
+FuncType = Callable[..., ReturnType]
 
 def arc(**attribute_kwargs) -> Callable:
     """ Returns a function that sets instance attributes as default values.
