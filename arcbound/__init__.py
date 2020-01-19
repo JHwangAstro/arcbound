@@ -5,4 +5,5 @@ namespace.
 
 from .arc import arc
 from .graph import graph
+from .requires import requires
 
