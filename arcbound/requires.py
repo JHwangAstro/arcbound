@@ -1,4 +1,5 @@
-"""
+""" The requires decorator checks if a package is available and raises an error
+or sends a warning otherwise.
 """
 
 import functools
@@ -7,13 +8,12 @@ from typing import Callable, TypeVar
 import warnings
 
 ClassType = TypeVar("ClassType")
-RequiresType = Callable[..., ClassType]
 
 def requires(
     package: str,
     message: str = None,
     warn_only: bool = False,
-) -> RequiresType:
+) -> Callable[..., ClassType]:
     """ Returns a function checking if the requested package is installed.
 
     Args:
