@@ -196,5 +196,40 @@ def graph(cls: ClassType) -> Callable[[ClassType], ClassType]:
 
             return functools.partial(f, self)
 
+        @arc(graph="arcbound_graph")
+        def create_arcbound_graph(
+            self,
+            graph: ArcboundGraph,
+            filename: str = "arcbound_graph.png",
+            file_format: str = "png",
+            **digraph_kwargs
+        ) -> Digraph:
+            """ Returns a graphviz-generated DiGraph made of the decorated
+            methods.
+            """
+            return Digraph(
+                deps_by_node=graph.arcs,
+                filename=filename,
+                file_format=file_format,
+                digraph_kwargs=digraph_kwargs
+            ).graph
+
+        def render_arcbound_graph(
+            self,
+            filename: str = "arcbound_graph.png",
+            file_format: str = "png",
+            directory: str = "./",
+            **digraph_kwargs
+        ) -> str:
+            """ Save the graph. Returns the path to the saved file.
+            """
+            graph = self.create_arcbound_graph(
+                filename=filename,
+                file_format=file_format,
+                **digraph_kwargs
+            )
+
+            return graph.render(filename=filename, directory=directory)
+
     return wrapper_class
 
