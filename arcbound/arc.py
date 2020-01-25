@@ -10,7 +10,7 @@ from typing import Callable, TypeVar
 ReturnType = TypeVar("ReturnType")
 FuncType = Callable[..., ReturnType]
 
-def arc(**attribute_kwargs) -> Callable:
+def arc(**attribute_kwargs) -> Callable[[FuncType], FuncType]:
     """ Returns a function that sets instance attributes as default values.
 
     This decorator enables methods within a class to be constructed into a
