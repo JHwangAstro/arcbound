@@ -8,7 +8,7 @@ import re
 from setuptools import setup, find_packages
 
 __author__ = "Jason Hwang"
-__email__ = "jhwang.astro@gmail.com"
+__email__ = "@".join(["jhwang.astro", "gmail.com"])
 __url__ = "https://github.com/JHwangAstro/arcbound"
 __description__ = "Collection of tools to arrange bound methods into a graph."
 
@@ -43,7 +43,10 @@ def get_version(*paths) -> str:
     return version
 
 
-install_requires = []
+install_requires = [
+    "attrs>=19.3.0"
+]
+
 extras_require = {
     # Required to visualize methods graph.
     "graphviz": ["graphviz==0.13.2"]
