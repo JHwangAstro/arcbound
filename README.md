@@ -40,5 +40,5 @@ example.get_arcbound_node("catepillar")(y=-2)
 
 example.visualize_arcbound_graph()
 ```
-![arcbound_graph](https://github.com/JHwangAstro/mtg-python/blob/master/utils/arcbound_graph.png "ArcboundGraph")
+![arcbound_graph](https://github.com/JHwangAstro/arcbound/blob/master/utils/arcbound_graph.png "ArcboundGraph")
 
