@@ -23,6 +23,9 @@ class Digraph(object):
     nodes.
     """
     deps_by_node: Dict[str, Set[str]]
+    filename: str = "arcbound_digraph" 
+    file_format: str = "png"
+    digraph_kwargs: dict = attr.Factory(dict)
 
     ############################################################################
     # Set up the nodes and edges.
@@ -54,16 +57,33 @@ class Digraph(object):
     ############################################################################
 
     @property
+    @arc(
+        filename="filename",
+        file_format="file_format",
+        digraph_kwargs="digraph_kwargs"
+    )
     def blank_graph(
         self,
-        graph_name="test",
-        filename="test",
-        node_attr=None,
-        file_format=""
+        graph_name: str = "test",
+        filename: str = "test",
+        file_format: str = "png",
+        digraph_kwargs: dict = None
     ) -> graphviz.Digraph:
         """ Returns an instantiated graphviz Digraph object.
+
+        Args:
+            graph_name: Graph name used in the source code.
+            filename: Filename to save the output to.
+            file_format: How to render the output format.
+            digraph_kwargs (dict): Additional kwargs to pass to the Digraph
+                instantiation.
         """
-        return graphviz.Digraph()
+        return graphviz.Digraph(
+            name=graph_name,
+            filename=filename,
+            format=file_format,
+            **digraph_kwargs
+        )
 
     @property
     @arc(dag="blank_graph", deps_by_node="deps_by_node")
