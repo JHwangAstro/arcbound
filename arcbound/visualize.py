@@ -1,7 +1,11 @@
 """ Visualizes arcbound graphs.
+
+Requires graphviz.
 """
 
 from typing import Dict, Set
+
+import attr
 
 try:
     import graphviz
@@ -12,29 +16,13 @@ from .arc import arc
 from .requires import requires
 
 
-@requires("graphviz", "arcbound.visualize.Digraph required graphviz.")
+@requires("graphviz")
+@attr.s(auto_attribs=True)
 class Digraph(object):
     """ Creates a digraph from an input dictionary mapping dependencies to
     nodes.
     """
-    def __init__(self, deps_by_node: Dict[str, Set[str]]) -> None:
-        """ Initializes the digraph.
-
-        Raises:
-            ImportError: graphviz required.
-        """
-        if not _graphviz_loaded:
-            raise ImportError("Digraph requires graphviz.")
-
-        self._deps_by_node = deps_by_node
-
-        return None
-
-    @property
-    def deps_by_node(self) -> Dict[str, Set[str]]:
-        """ Returns a dictionary mapping dependencies by node.
-        """
-        return self._deps_by_node
+    deps_by_node: Dict[str, Set[str]]
 
     ############################################################################
     # Set up the nodes and edges.
