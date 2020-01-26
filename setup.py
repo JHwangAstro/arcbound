@@ -42,6 +42,10 @@ def get_version(*paths) -> str:
 
     return version
 
+this_directory = os.path.abspath(os.path.dirname(__file__))
+
+with open(os.path.join(this_directory, "README.md"), encoding="utf-8") as f:
+    long_description = f.read()
 
 install_requires = [
     "attrs>=19.3.0"
@@ -56,7 +60,8 @@ setup(
     name="arcbound",
     version=get_version("arcbound", "release.py"),
     description=__description__,
-    long_description=__doc__,
+    long_description=long_description,
+    long_description_content_type="text/markdown",
     author=__author__,
     author_email=__email__,
     url=__url__,
