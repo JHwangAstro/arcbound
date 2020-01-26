@@ -29,7 +29,6 @@ def requires(
 
         Args:
             cls: Class to be modified with a package check.
-        class class_with_requires(cls):
         """
         class class_with_requires(cls):
             """ Adds a package check to the __init__ method of the parent class.
