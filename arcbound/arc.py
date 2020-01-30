@@ -5,12 +5,36 @@ documenting this dependency.
 
 import functools
 import inspect
-from typing import Callable, TypeVar
+from typing import Callable, Tuple, TypeVar
+
+import attr
 
 ReturnType = TypeVar("ReturnType")
 FuncType = Callable[..., ReturnType]
 
-def arc(**attribute_kwargs) -> Callable[[FuncType], FuncType]:
+
+@attr.s(auto_attribs=True, hash=False)
+class Arc(object):
+    """ Sets options on how an arc should be created.
+
+    input_parameters:
+        name: Name of the attribute to set as default.
+        conditional: Function taking a class instance as an input, determining
+            if the attribute should be set.
+        tag_only: Determines if the arc should be used only for documentation;
+            will not set the default to the attribute if set to True.
+    """
+    name: str
+    conditional: Callable[..., bool] = attr.Factory(lambda: lambda cls: True)
+    tag_only: bool = False
+
+
+def arcs(
+    auto_arcs: bool = False,
+    arc_tags: Tuple[str] = (),
+    extra_attribute_kwargs: dict = None,
+    **attribute_kwargs
+) -> Callable[[FuncType], FuncType]:
     """ Returns a function that sets instance attributes as default values.
 
     This decorator enables methods within a class to be constructed into a
@@ -18,7 +42,13 @@ def arc(**attribute_kwargs) -> Callable[[FuncType], FuncType]:
     containing a dictionary defining the attributes to set as default values.
 
     Args:
-        **attribute_kwargs: keyword to attribute values to set as defaults in
+        auto_arcs: Determines if arcs should automatically be created from all
+            keywords in the input function.
+        arc_tags: Arcs to document without affecting the input function.
+        extra_attribute_kwargs: Dictionary explicitly mapping keyword to
+            attribute values to set as defaults in the input function to avoid
+            potential namespace collisions.
+        **attribute_kwargs: Keyword to attribute values to set as defaults in
             the input function.
 
     Example:
@@ -48,38 +78,107 @@ def arc(**attribute_kwargs) -> Callable[[FuncType], FuncType]:
         """ Returns a function with default values set to the object's
         attributes and adds the deps attribute to the wrapper function.
 
+        Assumes that the first argument is the object-reference variable.
+
+        If auto_arcs is true, attempts to set all arguments in the function
+        with a default as the identically named attribute in the instance.
+
         Args:
             f: Function to decorate.
         """
+        self_kw, *func_kws = inspect.getfullargspec(f).args
+
+        # Combines the kwargs provided with an explicit dictionary argument
+        # to avoid potential namespace collisions.
+        all_attribute_kwargs = dict(
+            **attribute_kwargs,
+            **(extra_attribute_kwargs or {})
+        )
+
+        assert all(
+            isinstance(attribute, str) or isinstance(attribute, Arc)
+            for attribute in attribute_kwargs.values()
+        ), "All arc definitions should either be a string or Arc object."
+
         @functools.wraps(f)
         def wrapper(*args, **kwargs) -> ReturnType:
             """ Returns the results of the input function with default values
             set by the attribute kwargs.
-
-            Assumes that the first argument is the object-reference variable.
             """
             # Assign arguments without a keyword to the appropriate keywords.
             self, *non_self_args = args
-            self_kw, *func_kws = inspect.getfullargspec(f).args
-
             arg_kwargs = {k: v for k, v in zip(func_kws, non_self_args)}
 
+            # If auto_arcs is set to true, auto_kwargs maps the each argument
+            # to the identically named attribute if it exists.
+            if auto_arcs:
+                auto_attrs_by_kw = (
+                    (k, getattr(self, k, None))
+                    for k in func_kws
+                    if k not in all_attribute_kwargs
+                )
+
+                auto_kwargs = {
+                    k: attribute
+                    for k, attribute in auto_attrs_by_kw
+                    if attribute is not None
+                }
+
+            else:
+                auto_kwargs = {}
+
+            unpacked_attribute_kwargs = {
+                k: attribute
+                if isinstance(attribute, str) else
+                attribute.name
+                for k, attribute in all_attribute_kwargs.items()
+                if (
+                    isinstance(attribute, str)
+                    or (attribute.conditional(self) & ~attribute.tag_only)
+                )
+            }
+
             instantiated_attribute_kwargs = {
-                k: getattr(self, attr)
-                for k, attr in attribute_kwargs.items()
+                k: getattr(self, attribute)
+                for k, attribute in unpacked_attribute_kwargs.items()
             }
 
             combined_kwargs = {
+                **auto_kwargs,
                 **instantiated_attribute_kwargs,
                 **kwargs,
                 **arg_kwargs
             }
-            
+
             return f(self, **combined_kwargs)
 
-        wrapper.arc = tuple(attribute_kwargs.values())
+        # Set edges even if conditionals were not met.
+        if auto_arcs:
+            auto_arc_tags = ()
+
+        else:
+            auto_arc_tags = tuple(
+                k
+                for k in func_kws
+                if k not in all_attribute_kwargs
+            )
+
+        unpacked_arc_tags = tuple(
+            attribute 
+            if isinstance(attribute, str) else
+            attribute.name
+            for k, attribute in all_attribute_kwargs.items()
+        ) 
+
+        wrapper.arc = tuple(auto_arc_tags + unpacked_arc_tags + arc_tags)
         
         return wrapper
     
     return wrapper_factory 
+
+
+def arc(**attribute_kwargs) -> Callable[[FuncType], FuncType]:
+    """ Placeholder for arcs. Will be deprecated on release.
+    """
+    return arcs(**attribute_kwargs)
 
