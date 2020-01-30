@@ -1,5 +1,7 @@
 """ The graph function wraps an input class, adding properties accessing methods
 decorated with arcbound.arc.
+
+TODO: Add an option to show nodes without edges. 
 """
 
 import functools
@@ -90,6 +92,7 @@ def create_arcbound_graph(cls: ClassType) -> ArcboundGraph:
             return {
                 name: {dep for dep in method.arcs}
                 for name, method in nodes.items()
+                if method.arcs
             }
         
         @arcs(nodes="nodes")
