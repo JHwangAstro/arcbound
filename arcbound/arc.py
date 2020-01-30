@@ -5,7 +5,7 @@ documenting this dependency.
 
 import functools
 import inspect
-from typing import Callable, Tuple, TypeVar
+from typing import Callable, Dict, Tuple, TypeVar, Union
 
 import attr
 
@@ -19,18 +19,22 @@ class Arc(object):
 
     input_parameters:
         name: Name of the attribute to set as default.
+        silent: Determines if the arc is documented.
         conditional: Function taking a class instance as an input, determining
             if the attribute should be set.
         tag_only: Determines if the arc should be used only for documentation;
             will not set the default to the attribute if set to True.
     """
     name: str
+    silent: bool = False
     conditional: Callable[..., bool] = attr.Factory(lambda: lambda cls: True)
     tag_only: bool = False
 
 
 def arcs(
     auto_arcs: bool = False,
+    silent_arcs: bool = False,
+    arc_generator: Callable[..., Dict[str, Union[str, Arc]]] = None,
     arc_tags: Tuple[str] = (),
     extra_attribute_kwargs: dict = None,
     **attribute_kwargs
@@ -44,6 +48,8 @@ def arcs(
     Args:
         auto_arcs: Determines if arcs should automatically be created from all
             keywords in the input function.
+        silent_arcs: Determines if the arcs are documented.
+        arc_generator: Function defining arcs at runtime from the instance.
         arc_tags: Arcs to document without affecting the input function.
         extra_attribute_kwargs: Dictionary explicitly mapping keyword to
             attribute values to set as defaults in the input function to avoid
@@ -60,11 +66,11 @@ def arcs(
                 return None
 
             @property
-            @ab.arc(x="root")
+            @ab.arcs(x="root")
             def branch(self, x: int) -> int:
                 return x * x 
 
-            @ab.arc(x="branch", y="branch")
+            @ab.arcs(x="branch", y="branch")
             def leaf(self, x: int, y: int) -> int:
                 return x * y
 
@@ -90,14 +96,14 @@ def arcs(
 
         # Combines the kwargs provided with an explicit dictionary argument
         # to avoid potential namespace collisions.
-        all_attribute_kwargs = dict(
+        initial_attribute_kwargs = dict(
             **attribute_kwargs,
             **(extra_attribute_kwargs or {})
         )
 
         assert all(
             isinstance(attribute, str) or isinstance(attribute, Arc)
-            for attribute in attribute_kwargs.values()
+            for attribute in initial_attribute_kwargs.values()
         ), "All arc definitions should either be a string or Arc object."
 
         @functools.wraps(f)
@@ -107,7 +113,22 @@ def arcs(
             """
             # Assign arguments without a keyword to the appropriate keywords.
             self, *non_self_args = args
-            arg_kwargs = {k: v for k, v in zip(func_kws, non_self_args)}
+            unused_kws = (k for k in func_kws if k not in kwargs)
+            arg_kwargs = {k: v for k, v in zip(unused_kws, non_self_args)}
+
+            # Generate attribute kwargs.
+            if arc_generator is None:
+                generated_attribute_kwargs = {}
+
+            else:
+                generated_attribute_kwargs = arc_generator(self) 
+
+            # Combines the kwargs provided with an explicit dictionary argument
+            # to avoid potential namespace collisions.
+            all_attribute_kwargs = dict(
+                **initial_attribute_kwargs,
+                **generated_attribute_kwargs,
+            )
 
             # If auto_arcs is set to true, auto_kwargs maps the each argument
             # to the identically named attribute if it exists.
@@ -152,25 +173,34 @@ def arcs(
 
             return f(self, **combined_kwargs)
 
-        # Set edges even if conditionals were not met.
-        if auto_arcs:
-            auto_arc_tags = ()
+        if silent_arcs:
+            tagged_arcs = ()
 
         else:
-            auto_arc_tags = tuple(
-                k
-                for k in func_kws
-                if k not in all_attribute_kwargs
+            # Set edges even if conditionals were not met.
+            if auto_arcs:
+                auto_arc_tags = tuple(
+                    k
+                    for k in func_kws
+                    if k not in initial_attribute_kwargs
+                )
+
+            else:
+                auto_arc_tags = ()
+
+            unpacked_arc_tags = tuple(
+                attribute 
+                if isinstance(attribute, str) else
+                attribute.name
+                for k, attribute in initial_attribute_kwargs.items()
+                if isinstance(attribute, str) or ~attribute.silent
             )
 
-        unpacked_arc_tags = tuple(
-            attribute 
-            if isinstance(attribute, str) else
-            attribute.name
-            for k, attribute in all_attribute_kwargs.items()
-        ) 
+            tagged_arcs = tuple(
+                auto_arc_tags + unpacked_arc_tags + arc_tags
+            )
 
-        wrapper.arc = tuple(auto_arc_tags + unpacked_arc_tags + arc_tags)
+        wrapper.arcs = tagged_arcs
         
         return wrapper
     
