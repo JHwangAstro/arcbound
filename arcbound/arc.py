@@ -5,11 +5,12 @@ documenting this dependency.
 
 import functools
 import inspect
-from typing import Callable, Dict, Tuple, TypeVar, Union
+from typing import Any, Callable, Dict, Tuple, TypeVar, Union
 
 import attr
 
 ReturnType = TypeVar("ReturnType")
+ClassType = TypeVar("ClassType")
 FuncType = Callable[..., ReturnType]
 
 
@@ -26,9 +27,36 @@ class Arc(object):
             will not set the default to the attribute if set to True.
     """
     name: str
+    conditional: Callable[..., bool] = None
+    converter: Callable[..., Any] = None
     silent: bool = False
-    conditional: Callable[..., bool] = attr.Factory(lambda: lambda cls: True)
     tag_only: bool = False
+
+    def valid(self, cls: ClassType) -> bool:
+        """ Determines if the default value should be assigned to the arc.
+        """
+        if self.conditional is None:
+            valid = True
+
+        else:
+            valid = self.conditional(cls)
+
+        return valid
+
+    def value(self, cls: ClassType) -> Any:
+        """ Return the value to be assigned as the default value in the
+        function. If the converter argument is set, return the output of the
+        function applied to the attribute.
+        """
+        initial_value = getattr(cls, self.name)
+
+        if self.converter is None:
+            value = initial_value 
+
+        else:
+            value = self.converter(initial_value)
+
+        return value
 
 
 def arcs(
@@ -149,24 +177,19 @@ def arcs(
                 auto_kwargs = {}
 
             unpacked_attribute_kwargs = {
-                k: attribute
+                k: getattr(self, attribute)
                 if isinstance(attribute, str) else
-                attribute.name
+                attribute.value(self)
                 for k, attribute in all_attribute_kwargs.items()
                 if (
                     isinstance(attribute, str)
-                    or (attribute.conditional(self) & (not attribute.tag_only))
+                    or (attribute.valid(self) & (not attribute.tag_only))
                 )
-            }
-
-            instantiated_attribute_kwargs = {
-                k: getattr(self, attribute)
-                for k, attribute in unpacked_attribute_kwargs.items()
             }
 
             combined_kwargs = {
                 **auto_kwargs,
-                **instantiated_attribute_kwargs,
+                **unpacked_attribute_kwargs,
                 **kwargs,
                 **arg_kwargs
             }
