@@ -27,7 +27,7 @@ class Example():
         return x * y
     
     @ab.arc(x="branch", y="leaf")
-    def catepillar(self, x: int, y: int) -> int:
+    def caterpillar(self, x: int, y: int) -> int:
         return x * y
     
     def twig(self, x: int, y: int) -> int:
@@ -35,7 +35,7 @@ class Example():
 
 example = Example(5)
 
-example.get_arcbound_node("catepillar")(y=-2)
+example.get_arcbound_node("caterpillar")(y=-2)
 # -50
 
 example.visualize_arcbound_graph()
