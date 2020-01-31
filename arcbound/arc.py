@@ -58,7 +58,7 @@ def arcs(
             the input function.
 
     Example:
-        import arcbound as ab 
+        import arcbound as ab
 
         class Test():
             def __init__(self, root_val: int) -> None:
@@ -68,7 +68,7 @@ def arcs(
             @property
             @ab.arcs(x="root")
             def branch(self, x: int) -> int:
-                return x * x 
+                return x * x
 
             @ab.arcs(x="branch", y="branch")
             def leaf(self, x: int, y: int) -> int:
@@ -121,7 +121,7 @@ def arcs(
                 generated_attribute_kwargs = {}
 
             else:
-                generated_attribute_kwargs = arc_generator(self) 
+                generated_attribute_kwargs = arc_generator(self)
 
             # Combines the kwargs provided with an explicit dictionary argument
             # to avoid potential namespace collisions.
@@ -155,7 +155,7 @@ def arcs(
                 for k, attribute in all_attribute_kwargs.items()
                 if (
                     isinstance(attribute, str)
-                    or (attribute.conditional(self) & ~attribute.tag_only)
+                    or (attribute.conditional(self) & (not attribute.tag_only))
                 )
             }
 
@@ -189,11 +189,11 @@ def arcs(
                 auto_arc_tags = ()
 
             unpacked_arc_tags = tuple(
-                attribute 
+                attribute
                 if isinstance(attribute, str) else
                 attribute.name
                 for k, attribute in initial_attribute_kwargs.items()
-                if isinstance(attribute, str) or ~attribute.silent
+                if isinstance(attribute, str) or (not attribute.silent)
             )
 
             tagged_arcs = tuple(
@@ -201,14 +201,20 @@ def arcs(
             )
 
         wrapper.arcs = tagged_arcs
-        
+
         return wrapper
-    
-    return wrapper_factory 
+
+    return wrapper_factory
 
 
 def arc(**attribute_kwargs) -> Callable[[FuncType], FuncType]:
     """ Placeholder for arcs. Will be deprecated on release.
     """
     return arcs(**attribute_kwargs)
+
+
+def auto_arcs() -> Callable[[FuncType], FuncType]:
+    """ Syntactical sugar for arcs(auto_arcs=True).
+    """
+    return arcs(auto_arcs=True)
 
