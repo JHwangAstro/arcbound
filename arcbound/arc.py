@@ -51,7 +51,7 @@ class Arc(object):
         initial_value = getattr(cls, self.name)
 
         if self.converter is None:
-            value = initial_value 
+            value = initial_value
 
         else:
             value = self.converter(initial_value)
