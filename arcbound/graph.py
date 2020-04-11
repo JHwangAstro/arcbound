@@ -1,18 +1,18 @@
-""" The graph function wraps an input class, adding properties accessing methods
-decorated with arcbound.arc.
+""" The graph function wraps an input class, adding properties accessing
+methods decorated with arcbound.arc.
 
-TODO: Add an option to show nodes without edges. 
+TODO: Add an option to show nodes without edges.
 """
 
 import functools
-import inspect
-from typing import Callable, Dict, List, Tuple, Type, TypeVar
+from typing import Callable, Dict, List, Tuple, TypeVar
 
 from .arc import Arc, arcs
 from .visualize import Digraph
 
 ClassType = TypeVar("ClassType")
 ArcboundGraph = TypeVar("ArcboundGraph", bound="ArcboundGraph")
+
 
 def create_arcbound_graph(cls: ClassType) -> ArcboundGraph:
     """ Returns an ArcboundGraph object created using an input class.
@@ -31,10 +31,10 @@ def create_arcbound_graph(cls: ClassType) -> ArcboundGraph:
             properties: Dictionary mapping methods decorated with both
                 property and arcbound.arc to the property name.
             methods: Dictionary mapping methods decorated with arcbound.arc.
-            nodes: Dictionary combining the properties and methods dictionaries.
+            nodes: Dictionary combining the properties and methods properties.
             arcs: Dictionary mapping dependencies of methods decorated with
                 arcbound.arc.
-            
+
         Methods:
             get_node: Returns as a curried function the decorated method with
                 the instance variable already set.
@@ -54,12 +54,12 @@ def create_arcbound_graph(cls: ClassType) -> ArcboundGraph:
             """
             return {
                 function_name: method.fget
-                for function_name in functions_list 
+                for function_name in functions_list
                 for method in [getattr(cls, function_name)]
                 if isinstance(method, property)
                 if hasattr(method.fget, "arcs")
             }
-        
+
         @property
         @arcs(functions_list="class_attrs")
         def methods(self, functions_list: List[str]) -> Dict[str, Callable]:
@@ -68,11 +68,11 @@ def create_arcbound_graph(cls: ClassType) -> ArcboundGraph:
             """
             return {
                 function_name: method
-                for function_name in functions_list 
+                for function_name in functions_list
                 for method in [getattr(cls, function_name)]
                 if hasattr(method, "arcs")
             }
-        
+
         @property
         @arcs(d1="properties", d2="methods")
         def nodes(
@@ -94,7 +94,7 @@ def create_arcbound_graph(cls: ClassType) -> ArcboundGraph:
                 for name, method in nodes.items()
                 if method.arcs
             }
-        
+
         @arcs(nodes="nodes")
         def get_node(self, k: str, nodes: Dict[str, Callable]) -> Callable:
             """ Returns the function defining the method or property.
@@ -123,9 +123,9 @@ def graph(cls: ClassType) -> Callable[[ClassType], ClassType]:
         cls: Class to be decorated.
 
     Example:
-        import arcbound as ab 
+        import arcbound as ab
 
-    	@ab.graph
+        @ab.graph
         class test():
             def __init__(self, root_val: int) -> None:
                 self.root = root_val
@@ -134,7 +134,7 @@ def graph(cls: ClassType) -> Callable[[ClassType], ClassType]:
             @property
             @ab.arcs(x="root")
             def branch(self, x: int) -> int:
-                return x * x 
+                return x * x
 
             @ab.arcs(x="branch", y="branch")
             def leaf(self, x: int, y: int) -> int:
@@ -163,7 +163,7 @@ def graph(cls: ClassType) -> Callable[[ClassType], ClassType]:
 
         Test.get_arcbound_node("twig")(2, 3)
         # This method is not decorated.
-        
+
         Test.get_arcbound_node("nest")(10)
         # This method does not exist.
     """
@@ -174,7 +174,7 @@ def graph(cls: ClassType) -> Callable[[ClassType], ClassType]:
         Attributes:
             arcbound_graph: Returns an ArcboundGraph summarizing the input
                 class's decorated methods.
-            
+
         Functions:
             get_arcbound_node: Returns a curried function with the class's self
                 provided as the class instance.
@@ -185,12 +185,12 @@ def graph(cls: ClassType) -> Callable[[ClassType], ClassType]:
             with attributes decorated with arcbound.arcs.
             """
             return create_arcbound_graph(cls)()
-        
+
         @arcs(arcbound_graph=Arc("arcbound_graph", silent=True))
         def get_arcbound_node(
             self,
             k: str,
-            arcbound_graph: ArcboundGraph 
+            arcbound_graph: ArcboundGraph
         ) -> Callable:
             """ Returns the function defining the method or property with the
             instance variable already assigned.
@@ -235,4 +235,3 @@ def graph(cls: ClassType) -> Callable[[ClassType], ClassType]:
             return graph.render(filename=filename, directory=directory)
 
     return wrapper_class
-

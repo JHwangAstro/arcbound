@@ -20,28 +20,24 @@ class Arc(object):
 
     input_parameters:
         name: Name of the attribute to set as default.
-        silent: Determines if the arc is documented.
         conditional: Function taking a class instance as an input, determining
-            if the attribute should be set.
+            if the attribute should be set. The default function returns True.
+        converter: Function that transforms the linked attribute before
+            input to the decorated method.
+        silent: Determines if the arc is documented.
         tag_only: Determines if the arc should be used only for documentation;
             will not set the default to the attribute if set to True.
     """
     name: str
-    conditional: Callable[..., bool] = None
-    converter: Callable[..., Any] = None
+    conditional: Callable[..., bool] = attr.Factory(lambda: lambda x: True)
+    converter: Callable[..., Any] = attr.Factory(lambda: lambda x: x)
     silent: bool = False
     tag_only: bool = False
 
     def valid(self, cls: ClassType) -> bool:
         """ Determines if the default value should be assigned to the arc.
         """
-        if self.conditional is None:
-            valid = True
-
-        else:
-            valid = self.conditional(cls)
-
-        return valid
+        return self.conditional(cls)
 
     def value(self, cls: ClassType) -> Any:
         """ Return the value to be assigned as the default value in the
@@ -50,13 +46,7 @@ class Arc(object):
         """
         initial_value = getattr(cls, self.name)
 
-        if self.converter is None:
-            value = initial_value
-
-        else:
-            value = self.converter(initial_value)
-
-        return value
+        return self.converter(initial_value)
 
 
 def arcs(
@@ -145,11 +135,10 @@ def arcs(
             arg_kwargs = {k: v for k, v in zip(unused_kws, non_self_args)}
 
             # Generate attribute kwargs.
-            if arc_generator is None:
-                generated_attribute_kwargs = {}
-
-            else:
-                generated_attribute_kwargs = arc_generator(self)
+            generated_attribute_kwargs = (
+                {} if arc_generator is None else
+                arc_generator(self)
+            )
 
             # Combines the kwargs provided with an explicit dictionary argument
             # to avoid potential namespace collisions.
@@ -161,25 +150,21 @@ def arcs(
             # If auto_arcs is set to true, auto_kwargs maps the each argument
             # to the identically named attribute if it exists.
             if auto_arcs:
-                auto_attrs_by_kw = (
-                    (k, getattr(self, k, None))
+                auto_kwargs = {
+                    k: getattr(self, k)
                     for k in func_kws
                     if k not in all_attribute_kwargs
-                )
-
-                auto_kwargs = {
-                    k: attribute
-                    for k, attribute in auto_attrs_by_kw
-                    if attribute is not None
+                    if hasattr(self, k)
                 }
 
             else:
                 auto_kwargs = {}
 
             unpacked_attribute_kwargs = {
-                k: getattr(self, attribute)
-                if isinstance(attribute, str) else
-                attribute.value(self)
+                k: (
+                    getattr(self, attribute) if isinstance(attribute, str) else
+                    attribute.value(self)
+                )
                 for k, attribute in all_attribute_kwargs.items()
                 if (
                     isinstance(attribute, str)
@@ -212,8 +197,7 @@ def arcs(
                 auto_arc_tags = ()
 
             unpacked_arc_tags = tuple(
-                attribute
-                if isinstance(attribute, str) else
+                attribute if isinstance(attribute, str) else
                 attribute.name
                 for k, attribute in initial_attribute_kwargs.items()
                 if isinstance(attribute, str) or (not attribute.silent)
@@ -240,4 +224,3 @@ def auto_arcs() -> Callable[[FuncType], FuncType]:
     """ Syntactical sugar for arcs(auto_arcs=True).
     """
     return arcs(auto_arcs=True)
-

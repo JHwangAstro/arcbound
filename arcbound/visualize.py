@@ -23,13 +23,13 @@ class Digraph(object):
     nodes.
     """
     deps_by_node: Dict[str, Set[str]]
-    filename: str = "arcbound_digraph" 
+    filename: str = "arcbound_digraph"
     file_format: str = "png"
     digraph_kwargs: dict = attr.Factory(dict)
 
-    ############################################################################
+    ###########################################################################
     # Set up the nodes and edges.
-    ############################################################################
+    ###########################################################################
 
     @property
     @arc(deps_by_node="deps_by_node")
@@ -52,9 +52,9 @@ class Digraph(object):
             for dep in deps
         }
 
-    ############################################################################
-    # Draw the graph. 
-    ############################################################################
+    ###########################################################################
+    # Draw the graph.
+    ###########################################################################
 
     @property
     @arc(
@@ -93,14 +93,13 @@ class Digraph(object):
         deps_by_node: Dict[str, Set[str]]
     ) -> graphviz.Digraph:
         """ Returns a graphviz Digraph object with the nodes and edges defined
-        in the arcbound graph. 
+        in the arcbound graph.
         """
         for node in deps_by_node:
-            dag.node(name=node, label=node) 
+            dag.node(name=node, label=node)
 
         for node, deps in deps_by_node.items():
             for dep in deps:
                 dag.edge(dep, node)
 
         return dag
-

@@ -9,6 +9,7 @@ import warnings
 
 ClassType = TypeVar("ClassType")
 
+
 def requires(
     package: str,
     message: str = None,
@@ -45,6 +46,7 @@ def requires(
 
                 elif (not library_loaded):
                     default_warning = f"{package} not installed, proceeding."
+
                     warnings.warn(message or default_warning, ImportWarning)
 
                 return obj(*args, **kwargs)
@@ -70,12 +72,17 @@ def requires(
                         raise ImportError(message or default_error)
 
                     elif (not library_loaded):
-                        default_warning = f"{package} not installed, proceeding."
-                        warnings.warn(message or default_warning, ImportWarning)
+                        default_warning = f"""
+                            {package} not installed, proceeding.
+                            """
+
+                        warnings.warn(
+                            message or default_warning,
+                            ImportWarning
+                        )
 
                     super().__init__(*args, **kwargs)
 
         return obj_with_requires
 
     return wrapper_factory
-
