@@ -22,15 +22,18 @@ class Arc(object):
         name: Name of the attribute to set as default.
         conditional: Function taking a class instance as an input, determining
             if the attribute should be set. The default function returns True.
-        converter: Function that transforms the linked attribute before
+        transform: Function that transforms the linked attribute before
             input to the decorated method.
+        converter: Previous argument name for the transform input. Will be
+            deprecated in the future.
         silent: Determines if the arc is documented.
         tag_only: Determines if the arc should be used only for documentation;
             will not set the default to the attribute if set to True.
     """
     name: str
     conditional: Callable[..., bool] = attr.Factory(lambda: lambda x: True)
-    converter: Callable[..., Any] = attr.Factory(lambda: lambda x: x)
+    transform: Callable[..., Any] = attr.Factory(lambda: lambda x: x)
+    converter: Callable[..., Any] = None
     silent: bool = False
     tag_only: bool = False
 
@@ -46,7 +49,14 @@ class Arc(object):
         """
         initial_value = getattr(cls, self.name)
 
-        return self.converter(initial_value)
+        if self.converter is None:
+            value = self.transform(initial_value)
+
+        else:
+            print("Change converter to transform; will be deprecated.")
+            value = self.converter(initial_value)
+
+        return value
 
 
 def arcs(
