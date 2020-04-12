@@ -219,7 +219,7 @@ def graph(cls: ClassType) -> Callable[[ClassType], ClassType]:
 
         def render_arcbound_graph(
             self,
-            filename: str = "arcbound_graph.png",
+            filename: str = "arcbound_graph",
             file_format: str = "png",
             directory: str = "./",
             **digraph_kwargs
