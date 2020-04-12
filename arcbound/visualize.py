@@ -12,7 +12,7 @@ try:
 except ImportError:
     pass
 
-from .arc import arc
+from .arc import arcs, auto_arcs
 from .requires import requires
 
 
@@ -23,16 +23,16 @@ class Digraph(object):
     nodes.
     """
     deps_by_node: Dict[str, Set[str]]
-    filename: str = "arcbound_digraph" 
+    filename: str = "arcbound_digraph"
     file_format: str = "png"
     digraph_kwargs: dict = attr.Factory(dict)
 
-    ############################################################################
+    ###########################################################################
     # Set up the nodes and edges.
-    ############################################################################
+    ###########################################################################
 
     @property
-    @arc(deps_by_node="deps_by_node")
+    @auto_arcs()
     def nodes(self, deps_by_node: Dict[str, Set[str]]) -> Set[str]:
         """ Returns the nodes in the graph.
         """
@@ -42,7 +42,7 @@ class Digraph(object):
         )
 
     @property
-    @arc(deps_by_node="deps_by_node")
+    @auto_arcs()
     def edges(self, deps_by_node: Dict[str, Set[str]]) -> Set[str]:
         """ Returns the edges in the graph.
         """
@@ -52,16 +52,12 @@ class Digraph(object):
             for dep in deps
         }
 
-    ############################################################################
-    # Draw the graph. 
-    ############################################################################
+    ###########################################################################
+    # Draw the graph.
+    ###########################################################################
 
     @property
-    @arc(
-        filename="filename",
-        file_format="file_format",
-        digraph_kwargs="digraph_kwargs"
-    )
+    @auto_arcs()
     def blank_graph(
         self,
         graph_name: str = "test",
@@ -86,21 +82,20 @@ class Digraph(object):
         )
 
     @property
-    @arc(dag="blank_graph", deps_by_node="deps_by_node")
+    @arcs(dag="blank_graph", deps_by_node="deps_by_node")
     def graph(
         self,
         dag: graphviz.Digraph,
         deps_by_node: Dict[str, Set[str]]
     ) -> graphviz.Digraph:
         """ Returns a graphviz Digraph object with the nodes and edges defined
-        in the arcbound graph. 
+        in the arcbound graph.
         """
         for node in deps_by_node:
-            dag.node(name=node, label=node) 
+            dag.node(name=node, label=node)
 
         for node, deps in deps_by_node.items():
             for dep in deps:
                 dag.edge(dep, node)
 
         return dag
-
