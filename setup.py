@@ -8,9 +8,10 @@ import re
 from setuptools import setup, find_packages
 
 __author__ = "Jason Hwang"
-__email__ = "@".join(["jhwang.astro", "gmail.com"])
+__email__ = "@".join(("jhwang.astro", "gmail.com"))
 __url__ = "https://github.com/JHwangAstro/arcbound"
 __description__ = "Collection of tools to arrange bound methods into a graph."
+
 
 def get_version(*paths) -> str:
     """ Returns the version number by looking in the file paths specified.
@@ -41,6 +42,7 @@ def get_version(*paths) -> str:
         version = version_match.group(1)
 
     return version
+
 
 this_directory = os.path.abspath(os.path.dirname(__file__))
 
@@ -75,4 +77,3 @@ setup(
         "Operating System :: OS Independent"
     ]
 )
-

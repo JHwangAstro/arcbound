@@ -6,6 +6,9 @@ the methods and properties of a class are abstracted as nodes on a graph,
 inter-connected by arcs (directed edges).
 
 ## Installation
+```bash
+pip install arcbound
+```
 
 ## Usage example
 ```python
