@@ -138,7 +138,7 @@ class TestArc(unittest.TestCase):
     @property
     @ab.auto_arcs()
     def method_node(self, test_class: QuadraticSolver) -> Callable:
-        """ Retrieve a node from the arcbound_graph. 
+        """ Retrieve a node from the arcbound_graph.
         """
         return test_class.get_arcbound_node("discriminant")
 
