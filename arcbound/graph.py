@@ -7,7 +7,7 @@ TODO: Add an option to show nodes without edges.
 import functools
 from typing import Callable, Dict, List, Tuple, TypeVar
 
-from .arc import Arc, arcs
+from .arc import Arc, arcs, auto_arcs
 from .visualize import Digraph
 
 ClassType = TypeVar("ClassType")
@@ -85,7 +85,7 @@ def create_arcbound_graph(cls: ClassType) -> ArcboundGraph:
             return {**d1, **d2}
 
         @property
-        @arcs(nodes="nodes")
+        @auto_arcs()
         def edges(self, nodes: Dict[str, Callable]) -> Dict[str, Tuple[str]]:
             """ Returns a dictionary mapping dependencies by method/property.
             """
@@ -95,7 +95,7 @@ def create_arcbound_graph(cls: ClassType) -> ArcboundGraph:
                 if method.arcs
             }
 
-        @arcs(nodes="nodes")
+        @auto_arcs()
         def get_node(self, k: str, nodes: Dict[str, Callable]) -> Callable:
             """ Returns the function defining the method or property.
             """

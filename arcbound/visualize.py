@@ -12,7 +12,7 @@ try:
 except ImportError:
     pass
 
-from .arc import arc
+from .arc import arcs, auto_arcs
 from .requires import requires
 
 
@@ -32,7 +32,7 @@ class Digraph(object):
     ###########################################################################
 
     @property
-    @arc(deps_by_node="deps_by_node")
+    @auto_arcs()
     def nodes(self, deps_by_node: Dict[str, Set[str]]) -> Set[str]:
         """ Returns the nodes in the graph.
         """
@@ -42,7 +42,7 @@ class Digraph(object):
         )
 
     @property
-    @arc(deps_by_node="deps_by_node")
+    @auto_arcs()
     def edges(self, deps_by_node: Dict[str, Set[str]]) -> Set[str]:
         """ Returns the edges in the graph.
         """
@@ -57,11 +57,7 @@ class Digraph(object):
     ###########################################################################
 
     @property
-    @arc(
-        filename="filename",
-        file_format="file_format",
-        digraph_kwargs="digraph_kwargs"
-    )
+    @auto_arcs()
     def blank_graph(
         self,
         graph_name: str = "test",
@@ -86,7 +82,7 @@ class Digraph(object):
         )
 
     @property
-    @arc(dag="blank_graph", deps_by_node="deps_by_node")
+    @arcs(dag="blank_graph", deps_by_node="deps_by_node")
     def graph(
         self,
         dag: graphviz.Digraph,
