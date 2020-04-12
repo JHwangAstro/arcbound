@@ -12,36 +12,92 @@ pip install arcbound
 
 ## Usage example
 ```python
+import math
+from typing import Tuple, Union
+
 import arcbound as ab
+import attr
 
 @ab.graph
-class Example():
-    def __init__(self, root_val: int) -> None:
-        self.root = root_val
-        return None
+@attr.s(auto_attribs=True)
+class QuadraticSolver(object):
+    """ Calculates the solutions to a given quadratic equation.
 
+    Input parameters:
+        a: Quadratic coefficient.
+        b: Linear coefficient.
+        c: Constant.
+    """
+    a: float = 0.
+    b: float = 0.
+    c: float = 0.
+
+    # Here we explicitly define the coefficient arcs.
     @property
-    @ab.arc(x="root")
-    def branch(self, x: int) -> int:
-        return x * x 
+    @ab.arcs(a="a", b="b", c="c")
+    def discriminant(self, a: float, b: float, c: float) -> float:
+        """ Discriminant of the quadratic equation; used to determine the
+        number of roots and if they are rational.
+        """
+        return b * b - 4 * a * c
 
-    @ab.arc(x="branch", y="branch")
-    def leaf(self, x: int, y: int) -> int:
-        return x * y
-    
-    @ab.arc(x="branch", y="leaf")
-    def caterpillar(self, x: int, y: int) -> int:
-        return x * y
-    
-    def twig(self, x: int, y: int) -> int:
-        return x * y
+    # Here we use the auto_arcs decorator to automatically link to the
+    # property of the same name.
+    @property
+    @ab.auto_arcs()
+    def roots(
+        self,
+        a: float,
+        b: float,
+        discriminant: float
+    ) -> Tuple[Union[float, complex], ...]:
+        """ Returns the root(s) of the equation.
+        """
+        if discriminant == 0:
+            roots = (-b / (2 * a),)
 
-example = Example(5)
+        elif discriminant > 0:
+            roots = (
+                (-b + math.sqrt(discriminant)) / (2 * a),
+                (-b - math.sqrt(discriminant)) / (2 * a),
+            )
 
-example.get_arcbound_node("caterpillar")(y=-2)
-# -50
+        else:
+            real = -b / (2 * a)
+            imag = math.sqrt(-discriminant) / (2 * a)
+            roots = (
+                complex(real, imag),
+                complex(real, -imag)
+            )
 
-example.visualize_arcbound_graph()
+        return roots
+
+    # Since this property is not decorated with an arcbound decorator, a node
+    # is not generated on the arcbound_graph.
+    @property
+    def number_of_roots(self) -> int:
+        """ Returns the number of roots.
+        """
+        discriminant = self.discriminant
+
+        return (
+            1 if discriminant == 0. else
+            2
+        )
+
+
+quad_solver = QuadraticSolver(a=1, b=4, c=3)
+
+quad_solver.roots
+# (-1,0, -3.0)
+
+# Create a function that solves for the discriminant of a quadratic equation.
+# Retains the defaults of a=1, b=4, and c=3 from the quad_solver object.
+discriminant_solver = quad_solver.get_arcbound_node("discriminant")
+discriminant_solver(a=2, b=4)
+# -8
+
+quad_solver.visualize_arcbound_graph()
 ```
 ![arcbound_graph](https://github.com/JHwangAstro/arcbound/blob/master/utils/arcbound_graph.png "ArcboundGraph")
 
