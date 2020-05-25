@@ -160,11 +160,13 @@ def arcs(
             # If auto_arcs is set to true, auto_kwargs maps the each argument
             # to the identically named attribute if it exists.
             if auto_arcs:
+                available_attributes = set(dir(self))
+
                 auto_kwargs = {
                     k: getattr(self, k)
                     for k in func_kws
                     if k not in all_attribute_kwargs
-                    if hasattr(self, k)
+                    if k in available_attributes
                 }
 
             else:
